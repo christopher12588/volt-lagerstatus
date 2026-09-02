@@ -1,0 +1,35 @@
+name: Hent lagerstatus fra Customers1st
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  pull:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Kjor henting
+        env:
+          NYDVERK_TOKEN: ${{ secrets.NYDVERK_TOKEN }}
+          NYDALEN_TOKEN: ${{ secrets.NYDALEN_TOKEN }}
+          STAVANGER_TOKEN: ${{ secrets.STAVANGER_TOKEN }}
+          BERGEN_TOKEN: ${{ secrets.BERGEN_TOKEN }}
+        run: python3 c1st_lagerstatus_pull.py c1st_lagerstatus.json
+
+      - name: Commit og push resultat
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add c1st_lagerstatus.json
+          git diff --quiet --cached || git commit -m "Oppdater lagerstatus"
+          git push
